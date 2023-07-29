@@ -3,9 +3,6 @@ import os
 import pickle
 import pandas as pd
 from PIL import Image
-from sklearn.ensemble import GradientBoostingClassifier
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 
 # Function to simulate real-time data from CGMS device
 import time
@@ -43,31 +40,10 @@ def preprocess_input(data):
 
     return data_encoded
 
-data_path = r"C:\Users\wanji\Desktop\african techgirl hackathon\Africantech-Hackathon\diabetes_prediction_dataset.csv"
-
-# Read the dataset using pandas
-df = pd.read_csv(data_path)
-
-# Split the dataset into features (X) and target labels (y)
-X = df.drop("diabetes", axis=1)  # Your feature data (excluding the 'diabetes' column)
-y = df["diabetes"]  # Your target labels
-
-# Perform any necessary preprocessing on the input data
-X = preprocess_input(X)
-# Split the dataset into train and test sets
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-# Create and train the updated Gradient Boosting model
-gb_model_updated = GradientBoostingClassifier(random_state=42)
-gb_model_updated.fit(X_train, y_train)
-
-# Step 3: Pickle the updated model
+# Load the pre-trained Gradient Boosting model
 model_file_path = "C:/Users/wanji/Desktop/african techgirl hackathon/Africantech-Hackathon/gradient_boost_model.pkl"
-
-with open(model_file_path, "wb") as f:
-    pickle.dump(gb_model_updated, f)
-
-print("Updated model is saved.")
+with open(model_file_path, "rb") as f:
+    gb_model_updated = pickle.load(f)
 
 # Set Streamlit app background color
 st.markdown('<style>body{background-color: #F0F8FF;}</style>', unsafe_allow_html=True)
@@ -117,34 +93,41 @@ hypertension = st.selectbox("Select hypertension:", ["No", "Yes"])
 heart_disease = st.selectbox("Select heart_disease:", ["No", "Yes"])
 smoking_history = st.selectbox("Select smoking_history:", ["Never", "Former", "Current"])
 
-# Convert user input to a DataFrame
-input_data = pd.DataFrame({
-    "age": [age],
-    "bmi": [bmi],
-    "HbA1c_level": [HbA1c_level],
-    "blood_glucose_level": [blood_glucose_level],
-    "gender": [gender],
-    "hypertension": [hypertension],
-    "heart_disease": [heart_disease],
-    "smoking_history": [smoking_history]
-})
+# Add a "Predict" button
+if st.button("Predict"):
+    # Convert user input to a DataFrame
+    input_data = pd.DataFrame({
+        "age": [age],
+        "bmi": [bmi],
+        "HbA1c_level": [HbA1c_level],
+        "blood_glucose_level": [blood_glucose_level],
+        "gender": [gender],
+        "hypertension": [hypertension],
+        "heart_disease": [heart_disease],
+        "smoking_history": [smoking_history]
+    })
 
-# Preprocess the input data
-input_df = preprocess_input(input_data)
+    # Preprocess the input data
+    input_df = preprocess_input(input_data)
 
-# Make predictions using the updated Gradient Boosting model
-predictions_gb_updated = gb_model_updated.predict(input_df)
+    # Make predictions using the pre-trained Gradient Boosting model
+    predictions_gb_updated = gb_model_updated.predict(input_df)
 
-# Display the predictions
-st.subheader("Predictions:")
-st.write("Gradient Boosting:", predictions_gb_updated)
+    # Display the predictions
+    st.subheader("Predictions:")
+    if predictions_gb_updated[0] == 0:
+        st.write("Diabetes: No")
+    else:
+        st.write("Diabetes: Yes")
 
 # Simulate real-time data
-glucose_level, timestamp = get_realtime_data()
-st.subheader("Real-Time Data:")
-st.write("Glucose Level:", glucose_level)
-st.write("Timestamp:", timestamp)
+# (Since we don't have the actual CGMS device data, this part is commented out)
+# glucose_level, timestamp = get_realtime_data()
+# st.subheader("Real-Time Data:")
+# st.write("Glucose Level:", glucose_level)
+# st.write("Timestamp:", timestamp)
 
 # Check for critical glucose level and display a warning message
-if glucose_level > 180:
-    st.warning("Warning: High glucose level detected!")
+# (Since we don't have the actual CGMS device data, this part is commented out)
+# if glucose_level > 180:
+#     st.warning("Warning: High glucose level detected!")
